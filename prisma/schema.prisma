@@ -18,6 +18,7 @@ model User {
  uuid           String    @unique @default(uuid())
  name           String
  email          String    @unique
+ verified       Boolean   @default(false)
  password       String
  createdAt      DateTime @default(now())
  updatedAt      DateTime @updatedAt
@@ -25,18 +26,22 @@ model User {
 
 model Customers {
   id             Int       @id @default(autoincrement()) @unique
+  uuid           String    @default(uuid()) @unique
   name           String
   address        Address[]
-  gst            String
+  gst            String @unique
   phone          String?
   email          String?
   invoice        Invoice[]
+  amount         Int   @default(0) 
+  ledger         Ledger[]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
 
 model Address {
   id             Int       @id @default(autoincrement()) @unique
+  uuid           String    @default(uuid()) @unique 
   customer       Customers @relation(fields: [customerId], references: [id])
   customerId     Int
   houseno        String?
@@ -52,22 +57,40 @@ model Address {
 model Invoice {
   id             Int @default(autoincrement()) @unique
   gst            String
-  awd            String
-  deliverydist   String
-  box            Int
-  weight         Float
-  rate           Int
-  mode           String
+  item           Json
+  customerData   Json
   customer       Customers @relation(fields: [customerId] , references: [id])
   customerId     Int
-  type           BillType
   billNo         String
+  status         Status
+  amount         Int
+  tax            Int
+  totalAmount    Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   }
 
+  model Ledger {
+    id           Int @id @default(autoincrement()) @unique
+    customer     Customers @relation(fields: [customerId] , references: [uuid])
+    customerId   String
+    prevAmount   Int
+    type         Action
+    newAmount    Int
+    total        Int
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+  }
 
-enum BillType {
-  BILL
-  ESTIMATE
+
+enum Status {
+  Pending
+  Cleared
+  Cancelled
+}
+
+enum Action {
+  Credit
+  Debit
+  Cancelled
 }
