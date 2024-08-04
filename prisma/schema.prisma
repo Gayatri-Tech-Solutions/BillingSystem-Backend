@@ -26,7 +26,7 @@ model User {
 
 model Customers {
   id             Int       @id @default(autoincrement()) @unique
-  uuid           String    @default(uuid()) @unique
+  uuid           String      @default(uuid()) @unique
   name           String
   address        Address[]
   gst            String @unique
@@ -55,13 +55,13 @@ model Address {
 }
 
 model Invoice {
-  id             Int @default(autoincrement()) @unique
+  id             Int    @id @default(autoincrement()) @unique
   gst            String
   item           Json
   customerData   Json
   customer       Customers @relation(fields: [customerId] , references: [id])
   customerId     Int
-  billNo         String
+  billNo         String @unique
   status         Status
   amount         Int
   tax            Int

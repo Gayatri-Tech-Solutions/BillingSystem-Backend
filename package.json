@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+  "bin": "server.js",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
+    "build" : "nexe -r controllers/**/* -r middlewares/**/* -r prisma/**/* -r routes/**/* -r utils/**/ -r .env -i server.js -o billing_server.exe",
     "dev": "nodemon server.js"
   },
   "keywords": [],
@@ -15,7 +17,7 @@
   "dependencies": {
     "@prisma/client": "^5.13.0",
     "@types/node": "^20.12.11",
-    
+    "axios": "^0.27.2",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
