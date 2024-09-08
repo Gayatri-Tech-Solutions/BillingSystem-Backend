@@ -14,79 +14,112 @@ datasource db {
 }
 
 model User {
- id             Int       @id @default(autoincrement()) @unique
- uuid           String    @unique @default(uuid())
- name           String
- email          String    @unique
- verified       Boolean   @default(false)
- password       String
- createdAt      DateTime @default(now())
- updatedAt      DateTime @updatedAt
+  id        Int         @id @unique @default(autoincrement())
+  uuid      String      @unique @default(uuid())
+  name      String
+  email     String      @unique
+  verified  Boolean     @default(false)
+  password  String
+  phone     String?     
+  otherData Json?
+  customers Customers[] 
+  address   Address[] 
+  invoice   Invoice[]  
+  ledger    Ledger[] 
+  todo      Todo[] 
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model Customers {
-  id             Int       @id @default(autoincrement()) @unique
-  uuid           String      @default(uuid()) @unique
-  name           String
-  address        Address[]
-  gst            String @unique
-  phone          String?
-  email          String?
-  invoice        Invoice[]
-  amount         Int   @default(0) 
-  ledger         Ledger[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id        Int       @id @unique @default(autoincrement())
+  uuid      String    @unique @default(uuid())
+  user      User      @relation(fields: [userId], references: [id] ,onDelete: Cascade)
+  userId    Int
+  name      String
+  address   Address[]
+  gst       String    
+  phone     String?
+  email     String?
+  invoice   Invoice[]
+  amount    Int       @default(0)
+  ledger    Ledger[]
+  otherData Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  @@unique([userId , gst])
 }
 
 model Address {
-  id             Int       @id @default(autoincrement()) @unique
-  uuid           String    @default(uuid()) @unique 
-  customer       Customers @relation(fields: [customerId], references: [id])
-  customerId     Int
-  houseno        String?
-  locality       String?
-  city           String
-  state          String
-  pin            Int?
-  country        String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id         Int       @id @unique @default(autoincrement())
+  uuid       String    @unique @default(uuid())
+  user       User      @relation(fields: [userId], references: [id] ,onDelete: Cascade)
+  userId     Int
+  customer   Customers @relation(fields: [customerId], references: [id])
+  customerId Int
+  houseno    String?
+  locality   String?
+  city       String
+  state      String
+  pin        Int?
+  country    String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model Invoice {
-  id             Int    @id @default(autoincrement()) @unique
-  gst            String
-  item           Json
-  customerData   Json
-  customer       Customers @relation(fields: [customerId] , references: [id])
-  customerId     Int
-  billNo         String @unique
-  status         Status
-  amount         Int
-  tax            Int
-  totalAmount    Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  }
+  id           Int       @id @unique @default(autoincrement())
+  gst          String
+  item         Json
+  user         User      @relation(fields: [userId], references: [id] ,onDelete: Cascade)
+  userId       Int
+  customerData Json?
+  customer     Customers @relation(fields: [customerId], references: [id])
+  customerId   Int
+  billNo       String    
+  status       Status
+  amount       Int
+  tax          Int
+  totalAmount  Int
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  @@unique([userId , billNo])
+}
 
-  model Ledger {
-    id           Int @id @default(autoincrement()) @unique
-    customer     Customers @relation(fields: [customerId] , references: [uuid])
-    customerId   String
-    prevAmount   Int
-    type         Action
-    newAmount    Int
-    total        Int
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
-  }
+model Ledger {
+  id         Int       @id @unique @default(autoincrement())
+  user       User      @relation(fields: [userId], references: [id] ,onDelete: Cascade)
+  userId     Int
+  customer   Customers @relation(fields: [customerId], references: [uuid])
+  customerId String
+  prevAmount Int
+  type       Action
+  newAmount  Int
+  total      Int
+  otherData  Json?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
 
+model Todo {
+  id        Int      @id @unique @default(autoincrement())
+  uuid      String   @unique @default(uuid())
+  user      User     @relation(fields: [userId], references: [id] ,onDelete: Cascade)
+  userId    Int
+  status    Status
+  task      String
+  otherData Json?
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 enum Status {
   Pending
   Cleared
   Cancelled
+  Done
+  todo
 }
 
 enum Action {

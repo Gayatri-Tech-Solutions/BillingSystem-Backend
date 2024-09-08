@@ -16,10 +16,18 @@ export const authorization = (req , res , next) =>{
         let decodedToken = null;
 
         try {
+            // Verify token and handle expiration
             decodedToken = jwt.verify(token, process.env.SECRET_KEY);
         } catch (err) {
-            return res.status(401).json({ message: 'Unauthorize decode',  status: false });
+            if (err.name === 'TokenExpiredError') {
+                // Handle token expiration error
+                return res.status(401).json({ message: 'Token expired', status: false });
+            } else {
+                // Handle other token errors (e.g., signature invalid)
+                return res.status(401).json({ message: 'Invalid token', status: false });
+            }
         }
+
 
         if (!decodedToken) {
             req.isAuth = false;

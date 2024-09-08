@@ -4,9 +4,9 @@ import customerRoutes from './customerRoutes.js'
 import invoiceRoutes from './invoiceRoutes.js'
 const router = Router()
 
-router.use('/user',userRoutes)
-router.use('/customer',customerRoutes)
-router.use('/invoice',invoiceRoutes)
+router.use('/user', userRoutes)
+router.use('/customer', customerRoutes)
+router.use('/invoice', invoiceRoutes)
 
 export default router
 

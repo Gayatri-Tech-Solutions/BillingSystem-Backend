@@ -6,11 +6,10 @@ import prisma from "./database.js"
 
 
 
-const generateInvoice = async({item, gst, billNo, status , amount, id ,totalAmount , tax , customerData}) =>{
-    console.log("data")
-    // console.log(data)
+const generateInvoice = async ({ item, gst, billNo, status, amount, id, totalAmount, tax, customerData, userid, createdAt }) => {
+
     return await prisma.invoice.create({
-        data:{
+        data: {
             item,
             totalAmount,
             tax,
@@ -18,12 +17,18 @@ const generateInvoice = async({item, gst, billNo, status , amount, id ,totalAmou
             gst,
             billNo,
             amount,
-            status ,
+            status,
+            createdAt,
             customer: {
                 connect: {
-                  id: id
+                    id: id
                 }
-              }
+            },
+            user: {
+                connect: {
+                    id: parseInt(userid)
+                }
+            }
         },
 
 

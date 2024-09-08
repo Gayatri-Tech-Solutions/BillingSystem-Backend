@@ -1,40 +1,43 @@
 import prisma from '../utils/database.js'
 import bcrypt from "bcrypt"
 
-const register = async({email , name , encryptedPassword}) =>{
-    console.log(email , name , encryptedPassword)
+const register = async ({ email, name, encryptedPassword }) => {
+
     return await prisma.user.create({
-        data:{
-            name ,
-            email ,
-            password : encryptedPassword
+        data: {
+            name,
+            email,
+            password: encryptedPassword
         }
     })
 
 }
 
-const login = async({email , password }) =>{
-    let findEmail =await prisma.user.findFirst({
-        where:{
+const login = async ({ email, password }) => {
+    let findEmail = await prisma.user.findFirst({
+        where: {
             email
+        },
+        include: {
+            address: true
         }
     })
 
-    console.log(findEmail)
 
 
 
-    if(findEmail){
-        let comparison = bcrypt.compareSync(password , findEmail.password )
 
-        if(comparison){
+    if (findEmail) {
+        let comparison = bcrypt.compareSync(password, findEmail.password)
+
+        if (comparison) {
             delete findEmail.password
             return findEmail
-        }else{
+        } else {
             throw new Error("Incorrect Password")
         }
 
-    }else{
+    } else {
         throw new Error("Email Not Found")
     }
 }

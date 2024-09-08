@@ -1,30 +1,42 @@
 import { connect } from "http2"
 import prisma from "./database.js"
 
-const addCustomer = async ({name,gst,phone,email,houseNo,locality,city,state,pin , country}) =>{
+const addCustomer = async ({ name, gst, phone, email, houseNo, locality, city, state, pin, country, id }) => {
 
     let response = await prisma.customers.create({
-        data:{
+
+        data: {
             name,
             gst,
             phone,
-            email
+            email,
+            user: {
+                connect: {
+                    id: parseInt(id)
+                }
+            },
         }
     })
 
-    console.log(response)
+
 
     return await prisma.address.create({
-        data:{
-            houseno : houseNo,
+
+        data: {
+            houseno: houseNo,
             locality,
             city,
-            state :state,
-            pin : parseInt(pin),
-            country : country,
-            customer:{
-                connect:{
-                    id : response.id
+            state: state,
+            pin: parseInt(pin),
+            country: country,
+            user: {
+                connect: {
+                    id: parseInt(id)
+                }
+            },
+            customer: {
+                connect: {
+                    id: response.id
                 }
             }
         }
@@ -32,9 +44,12 @@ const addCustomer = async ({name,gst,phone,email,houseNo,locality,city,state,pin
 
 }
 
-const updateCustomer = async({name,gst,phone,email,houseNo,locality,city,state,pin , country}) =>{
+const updateCustomer = async ({ name, gst, phone, email, houseNo, locality, city, state, pin, country, id }) => {
+
     let customerUpdateResponse = await prisma.customers.update({
-        where: { gst: gst },
+        where: {
+            id: parseInt(id),
+        },
         data: {
             name,
             phone,
@@ -43,7 +58,9 @@ const updateCustomer = async({name,gst,phone,email,houseNo,locality,city,state,p
     });
     // Update address details
     let addressUpdateResponse = await prisma.address.updateMany({
-        where: { customerId: customerUpdateResponse.id },
+        where: {
+            customerId: customerUpdateResponse.id
+        },
         data: {
             houseno: houseNo,
             locality,
@@ -54,7 +71,7 @@ const updateCustomer = async({name,gst,phone,email,houseNo,locality,city,state,p
         }
     });
 
-    console.log('Address updated:', addressUpdateResponse);
+
     return addressUpdateResponse
 
 }

@@ -7,7 +7,10 @@ export const generateInvoice = async (req, res) => {
 
     try {
 
-        const { gst, uuid, id, item, amount, totalAmount, tax, customerData, updateLedger } = req.body
+        const { gst, uuid, id, item, amount, totalAmount, tax, customerData, updateLedger, createdAt } = req.body
+        let { userid } = req.query
+        userid = parseInt(userid)
+
         let billNo = 0
         let led = {}
 
@@ -51,26 +54,25 @@ export const generateInvoice = async (req, res) => {
         //     console.log("led")
         //     console.log(led)
         // }
-        billNo = await generateBillNumber("B")
-        console.log(billNo)
+        billNo = await generateBillNumber("B", userid)
+
         let data = {
             gst,
             item,
             amount,
             status: 'Pending',
-            billNo
+            billNo,
+            userid,
         }
         // customerData.ledgerDetails = led.id || null
-        let response = await InvoiceUtils.generateInvoice({ ...data, id, totalAmount, tax, customerData })
-        console.log('response')
-        console.log(response)
+        let response = await InvoiceUtils.generateInvoice({ ...data, id, totalAmount, tax, customerData, createdAt })
 
         return res.status(200).json({
             status: true,
             data: "billNo"
         })
     } catch (error) {
-        console.log(error)
+
         return res.status(402).json({
             status: false,
             error: error
@@ -82,13 +84,17 @@ export const generateInvoice = async (req, res) => {
 export const getInvoices = async (req, res) => {
     try {
         let { page } = req.query
-        
+        let { userid } = req.query
+        userid = parseInt(userid)
+
         let skip = (parseInt(page) - 1) * 8
         let take = 8
         let count = await prisma.invoice.count()
-        console.log("Count")
-        console.log(count)
+
         let response = await prisma.invoice.findMany({
+            where: {
+                userId: userid
+            },
             include: {
                 customer: {
                     include: {
@@ -101,14 +107,14 @@ export const getInvoices = async (req, res) => {
             take: take
         })
         count = Math.ceil(parseInt(count) / 8)
-        
-            return res.status(200).json({
-                status: true,
-                data: response,
-                pageCount: count
-            })
+
+        return res.status(200).json({
+            status: true,
+            data: response,
+            pageCount: count
+        })
     } catch (error) {
-        console.log(error)
+
         return res.status(402).json({
             status: false,
             error: error
@@ -119,8 +125,9 @@ export const getInvoices = async (req, res) => {
 export const updatedInvoiceStatus = async (req, res) => {
     try {
         let { billNo, id, status, amount } = req.body
-        console.log("billNo , id ,status")
-        console.log(billNo, id, status, amount)
+        let { userid } = req.query
+        userid = parseInt(userid)
+
 
         // let ledgerResponse = await prisma.ledger.findMany({
         //     where: {
@@ -134,7 +141,8 @@ export const updatedInvoiceStatus = async (req, res) => {
         let response = await prisma.invoice.update({
             where: {
                 billNo,
-                id
+                id,
+                userId: userid
             },
             data: {
                 status
@@ -147,7 +155,7 @@ export const updatedInvoiceStatus = async (req, res) => {
         })
 
     } catch (err) {
-        console.log(err)
+
         return res.status(400).json({
             status: false,
             error: err
@@ -158,20 +166,20 @@ export const updatedInvoiceStatus = async (req, res) => {
 
 export const filterResult = async (req, res) => {
     try {
-        let { billNo, customerName, endDate, startDate, status ,page } = req.query
-        console.log("billNo , CustomerName , endDate , startDate , status")
-        // console.log(billNo , customerName , endDate , startDate , status) 
+        let { billNo, customerName, endDate, startDate, status, page } = req.query
+        let { userid } = req.query
+        userid = parseInt(userid)
         let query = {}
-        
+
         let skip = (parseInt(page) - 1) * 8
         let take = 8
-        
-        
-        
+
+
+
         if (billNo != "") {
             billNo = billNo.toUpperCase()
             query.billNo = billNo
-            console.log(billNo)
+
         }
         if (customerName != "") {
             customerName = customerName.toLowerCase().trim()
@@ -180,8 +188,8 @@ export const filterResult = async (req, res) => {
                     contains: customerName,
                 }
             };
-            console.log(customerName)
-            
+
+
         }
         if (status != "") {
             query.status = status
@@ -205,36 +213,34 @@ export const filterResult = async (req, res) => {
                 lte: endOfDay
             }
         }
-        
-        
+
+
         let count = await prisma.invoice.count({
-            where:{
+            where: {
+                userId: userid,
                 ...query
             }
         })
         count = Math.ceil(parseInt(count) / 8)
-        console.log("count")
-        console.log(count)
-        
-        console.log(query)
+
         let response = {}
         response = await prisma.invoice.findMany({
             where: {
-                ...query
+                ...query,
+                userId: userid
             },
             include: {
                 customer: true
             },
-            skip : skip,
-            take : take
+            skip: skip,
+            take: take
         })
         res.status(200).json({
             status: true,
             data: response,
-            pageCount : count
+            pageCount: count
         });
     } catch (error) {
-        console.log("Error in invoice filters", error)
         res.status(400).json({
             status: false,
             error
@@ -242,7 +248,7 @@ export const filterResult = async (req, res) => {
     }
 }
 
-async function generateBillNumber(type) {
+async function generateBillNumber(type, userId) {
 
     const today = new Date();
     const month = ('0' + (today.getMonth() + 1)); // Add leading zero if month < 10
@@ -250,6 +256,7 @@ async function generateBillNumber(type) {
 
     const billsCountThisMonth = await prisma.invoice.count({
         where: {
+            userId,
             createdAt: {
                 gte: new Date(today.getFullYear(), today.getMonth(), 1), // Start of current month
                 lt: new Date(today.getFullYear(), today.getMonth() + 1, 0), // End of current month
