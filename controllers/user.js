@@ -37,7 +37,7 @@ export const login = async (req, res) => {
 export const register = async (req, res) => {
 
 
-    let { email, password, name } = req.body
+    let { email, password, name , phone } = req.body
     try {
 
         let findEmail = await prisma.user.findFirst({
@@ -49,7 +49,7 @@ export const register = async (req, res) => {
             throw new Error("User Already Exist")
         } else {
             let encryptedPassword = bcrypt.hashSync(password, 10)
-            let response = await userUtils.register({ email, name, encryptedPassword })
+            let response = await userUtils.register({ email, name, encryptedPassword,phone })
 
             delete (response.password)
             return res.status(200).json({

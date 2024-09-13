@@ -1,11 +1,12 @@
 import prisma from '../utils/database.js'
 import bcrypt from "bcrypt"
 
-const register = async ({ email, name, encryptedPassword }) => {
+const register = async ({ email, name, encryptedPassword,phone }) => {
 
     return await prisma.user.create({
         data: {
             name,
+            phone,
             email,
             password: encryptedPassword
         }
